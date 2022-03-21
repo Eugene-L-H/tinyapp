@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Eugene-L-H/tinyapp/issues"
   },
-  "homepage": "https://github.com/Eugene-L-H/tinyapp#readme"
+  "homepage": "https://github.com/Eugene-L-H/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
 }
