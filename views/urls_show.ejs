@@ -19,10 +19,10 @@
   </div>
 
   <div>
-    <form action="">
+    <form method="POST" action="/urls/<%= shortURL %>">
       <label for="new_url">New URL:</label>
-      <input type="text" name="new_url">
-      <button>Submit</button>
+      <input type="text" class="" name="new_url" id="new_url">
+      <button type="submit" class="btn btn-primary">Submit</button>
     </form>
   </div>
   <!-- Bootstrap JS -->
