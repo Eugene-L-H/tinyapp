@@ -2,8 +2,12 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+const morgan = require('morgan');
+app.use(morgan('dev'));
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+
 
 app.set('view engine', 'ejs');
 
@@ -15,6 +19,8 @@ const urlDatabase = {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+// ROUTES
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -30,6 +36,10 @@ app.get("/hello", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
+if (longURL === undefined) {
+  // res.send('<script>alert("Invalid URL")</script>');s
+  return res.redirect('/urls');
+}
   res.redirect(longURL);
 });
 
@@ -43,19 +53,25 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// READ
+
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { 
     shortURL: req.params.shortURL,
     longURL: req.params.longURL,
   }
 
-  templateVars.longURL = urlDatabase[templateVars.shortURL]; // Temp workaround
+  templateVars.longURL = urlDatabase[templateVars.shortURL]; // Temp workaround?
   res.render("urls_show", templateVars);
 });
 
+// UPDATE
+
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
+  
   let shortUrlRandom = generateRandomString();
+
   urlDatabase[shortUrlRandom] = req.body.longURL;
   res.redirect(`/urls/${shortUrlRandom}`); 
 });
