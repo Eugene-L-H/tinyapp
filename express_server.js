@@ -1,7 +1,3 @@
-/* TO RUN NODEMON:
-./node_modules/.bin/nodemon -L express_server.js
- */
-
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
