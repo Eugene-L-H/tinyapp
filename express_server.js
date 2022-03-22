@@ -72,7 +72,7 @@ app.get('*', (req, res) => {
   res.render('urls_index', templateVars);
 });
 
-// UPDATE
+// CREATE
 
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
@@ -83,10 +83,14 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortUrlRandom}`); 
 });
 
+// UPDATE
+
+
+
+// DELETE
+
 app.post("/urls/:shortURL/delete", (req, res) => {
-  console.log('urlDatabase: ', urlDatabase)
   delete urlDatabase[req.params.shortURL];
-  console.log('urlDatabase after: ', urlDatabase)
   res.redirect('/urls');
 });
 

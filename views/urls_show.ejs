@@ -7,6 +7,8 @@
 </head>
 
 <body>
+  <%- include('partials/_header') %>
+
   <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
@@ -14,6 +16,14 @@
         <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
       </div>
     <div class="card-footer text-muted"></div>
+  </div>
+
+  <div>
+    <form action="">
+      <label for="new_url">New URL:</label>
+      <input type="text" name="new_url">
+      <button>Submit</button>
+    </form>
   </div>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
