@@ -83,6 +83,13 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortUrlRandom}`); 
 });
 
+app.post("/urls/:shortURL/delete", (req, res) => {
+  console.log('urlDatabase: ', urlDatabase)
+  delete urlDatabase[req.params.shortURL];
+  console.log('urlDatabase after: ', urlDatabase)
+  res.redirect('/urls');
+});
+
 
 const generateRandomString = () => {
   return Math.random().toString(36).slice(-6);
