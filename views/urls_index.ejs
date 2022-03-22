@@ -23,9 +23,11 @@
         <% for(let url in urls) { %>
           <tr>
             <td><%= url %></td>
-            <a href="/urls/:<%= url %>">
-              <td><%= urls[url] %></td>
-            </a>
+            <td>
+              <a href="/urls/<%= url %>">
+                <%= urls[url] %>
+              </a>
+            </td>
           </tr>
         <% } %>
       </tbody>
