@@ -1,29 +1,33 @@
 const express = require("express");
-const cookieParser = require('cookie-parser');
 const app = express();
-app.use(cookieParser());
-const morgan = require('morgan');
-app.use(morgan('dev'));
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+
 const PORT = 8080; // default port 8080
 
 app.set('view engine', 'ejs');
+
+// MIDDLEWARE
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
+const morgan = require('morgan');
+app.use(morgan('dev'));
+
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
+
+// GLOBAL VARIABLES
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
+const userDatabase = {};
+
 // Listen for incoming requests
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-const displayUsername = function(username, path) {
-  templateVars = { username: username };
-  res.render(path, templateVars);
-}
 
 // ROUTES
 
@@ -51,16 +55,22 @@ if (longURL === undefined) {
 
 // redirect to show all URLs page
 app.get('/urls', (req, res) => {
+  const cookieID = req.cookies.id;
+  console.log('userDatabase: ', userDatabase);
+  console.log('cookieID: ', cookieID);
+  console.log('userDatabase[cookieID]: ', userDatabase[cookieID]);
+  const userObject = userDatabase[cookieID];
   const templateVars = { 
     urls: urlDatabase,
-    username: req.cookies.username
-   };
+    userObject: userObject
+  };
+  console.log('templateVars[userObject]: ', templateVars.userObject);
   res.render('urls_index', templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   templateVars = {
-    username: req.cookies.username
+    userObject: userDatabase[req.cookies.id]
   }
   res.render("urls_new", templateVars);
 });
@@ -71,13 +81,20 @@ app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { 
     shortURL: req.params.shortURL,
     longURL: req.params.longURL,
-    username: req.cookies.username
+    userObject: userDatabase[req.cookies.id]
   }
 
   templateVars.longURL = urlDatabase[templateVars.shortURL]; // Temp workaround?
   res.render("urls_show", templateVars);
 });
 
+app.get('/register', (req, res) => {
+  templateVars = {
+    userObject: userDatabase[req.cookies.id]
+  }
+  console.log('tem vars name: ', templateVars.username);
+  res.render('register_form', templateVars);
+});
 
 app.get('*', (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -98,10 +115,25 @@ app.post("/urls", (req, res) => {
 app.post('/login', (req, res) => {
   const username = req.body.username;
   
-  res.cookie('username', username);
-  console.log('username: ', username)
-  console.log('req.cookies: ', req.cookies);
-  
+  // res.cookie('username', username);
+  res.redirect('/urls');
+});
+
+app.post('/register', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const id = generateRandomString();
+
+  userDatabase[id] = {};
+  userDatabase[id]['id'] = id;
+  userDatabase[id]['email'] = email;
+  userDatabase[id]['password'] = password;
+
+  // templateVars = {
+  //   userObject: userDatabase[req.cookies.id]
+  // }
+
+  res.cookie('id', id);
   res.redirect('/urls');
 });
 
@@ -122,7 +154,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie(req.cookies.id);
   res.redirect('/urls');
 });
 
