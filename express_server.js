@@ -22,7 +22,12 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const userDatabase = {};
+const userDatabase = {
+  1: {
+    email: 'eugenehelland@mail.com',
+    password: 'test'
+  }
+};
 
 // Listen for incoming requests
 app.listen(PORT, () => {
@@ -90,6 +95,7 @@ app.get('/urls/:shortURL', (req, res) => {
 
 app.get('/register', (req, res) => {
   templateVars = {
+    userDatabase: userDatabase,
     userObject: userDatabase[req.cookies.id]
   }
   console.log('tem vars name: ', templateVars.username);
@@ -123,6 +129,21 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const id = generateRandomString();
+
+  if (email === '' || password === '') {
+    return res
+      .status(400)
+      .send('Both password and email fields must be filled out to register.');
+  }
+
+  console.log('userDatabase: ', urlDatabase);
+  console.log('emailLookup: ', emailLookup(email, userDatabase));
+  
+  if (emailLookup(email, userDatabase)) {
+    return res
+      .status(400)
+      .send('That email is already registered.')
+  }
 
   userDatabase[id] = {};
   userDatabase[id]['id'] = id;
@@ -162,4 +183,13 @@ app.post('/logout', (req, res) => {
 
 const generateRandomString = () => {
   return Math.random().toString(36).slice(-6);
+};
+
+const emailLookup = function(email, database) {
+  for (let key in database) {
+    if (database[key]['email'] === email) {
+      return true;
+    }
+  }
+  return false;
 };
