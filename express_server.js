@@ -1,12 +1,12 @@
 const express = require("express");
+const cookieParser = require('cookie-parser');
 const app = express();
-const PORT = 8080; // default port 8080
-
+app.use(cookieParser());
 const morgan = require('morgan');
 app.use(morgan('dev'));
-
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+const PORT = 8080; // default port 8080
 
 app.set('view engine', 'ejs');
 
@@ -19,6 +19,11 @@ const urlDatabase = {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+const displayUsername = function(username, path) {
+  templateVars = { username: username };
+  res.render(path, templateVars);
+}
 
 // ROUTES
 
@@ -46,12 +51,18 @@ if (longURL === undefined) {
 
 // redirect to show all URLs page
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies.username
+   };
   res.render('urls_index', templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  templateVars = {
+    username: req.cookies.username
+  }
+  res.render("urls_new", templateVars);
 });
 
 // READ
@@ -60,6 +71,7 @@ app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { 
     shortURL: req.params.shortURL,
     longURL: req.params.longURL,
+    username: req.cookies.username
   }
 
   templateVars.longURL = urlDatabase[templateVars.shortURL]; // Temp workaround?
@@ -83,6 +95,16 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortUrlRandom}`); 
 });
 
+app.post('/login', (req, res) => {
+  const username = req.body.username;
+  
+  res.cookie('username', username);
+  console.log('username: ', username)
+  console.log('req.cookies: ', req.cookies);
+  
+  res.redirect('/urls');
+});
+
 // UPDATE
 
 app.post('/urls/:shortURL', (req, res) => {
@@ -99,6 +121,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect('/urls');
 });
 
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
+});
+
+// FUNCTIONS
 
 const generateRandomString = () => {
   return Math.random().toString(36).slice(-6);
