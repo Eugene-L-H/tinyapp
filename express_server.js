@@ -86,12 +86,10 @@ app.post("/urls", (req, res) => {
 // UPDATE
 
 app.post('/urls/:shortURL', (req, res) => {
-  console.log('short: ', req.params.shortURL);
-  console.log('long: ', req.body.new_url);
-  console.log('dataBase key: ', urlDatabase[req.params.shortURL]);
-  console.log('urlDataBase: ', urlDatabase);
-  urlDatabase[req.params.shortURL] = req.body.new_url;
-  console.log('urlDataBase: ', urlDatabase);
+  let shortURL = req.params.shortURL;
+  let newURL = req.body.new_url;
+  urlDatabase[shortURL] = newURL;
+  res.redirect('/urls');
 });
 
 // DELETE
