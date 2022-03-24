@@ -22,12 +22,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const userDatabase = {
-  1: {
-    email: 'eugenehelland@mail.com',
-    password: 'test'
-  }
-};
+const userDatabase = {};
 
 // Listen for incoming requests
 app.listen(PORT, () => {
@@ -61,9 +56,6 @@ if (longURL === undefined) {
 // redirect to show all URLs page
 app.get('/urls', (req, res) => {
   const cookieID = req.cookies.id;
-  console.log('userDatabase: ', userDatabase);
-  console.log('cookieID: ', cookieID);
-  console.log('userDatabase[cookieID]: ', userDatabase[cookieID]);
   const userObject = userDatabase[cookieID];
   const templateVars = { 
     urls: urlDatabase,
@@ -102,6 +94,14 @@ app.get('/register', (req, res) => {
   res.render('register_form', templateVars);
 });
 
+app.get('/login', (req, res) => {
+  templateVars = {
+    userDatabase: userDatabase,
+    userObject: userDatabase[req.cookies.id]
+  }
+  res.render('login_form', templateVars);
+});
+
 app.get('*', (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
@@ -119,13 +119,39 @@ app.post("/urls", (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  const username = req.body.username;
+  const email = req.body.email;
+  const password = req.body.password;
+  const user_id = req.cookies.id;
   
-  // res.cookie('username', username);
+  if (email === '' || password === '') {
+    return res
+    .status(400)
+    .send('Both password and email fields must be filled.');
+  }
+  
+  // Return error if email not in database
+  if (!emailLookup(email, userDatabase)) {
+    return res
+    .status(403)
+    .send('That email is not registered.');
+  }
+  
+  console.log('id in /login: ', user_id);
+  console.log('userDatabase: ', userDatabase);
+  console.log('DB password: ', userDatabase[user_id]['password']);
+
+  if (password !== userDatabase[user_id]['password']) {
+    return res
+    .status(403)
+    .send('Incorrect password.');
+  }
+  
+  res.cookie('user_id', );
   res.redirect('/urls');
 });
 
 app.post('/register', (req, res) => {
+  console.log('users: ', userDatabase);
   const email = req.body.email;
   const password = req.body.password;
   const id = generateRandomString();
@@ -155,6 +181,7 @@ app.post('/register', (req, res) => {
   // }
 
   res.cookie('id', id);
+  console.log('userDatabase after registration: ', userDatabase);
   res.redirect('/urls');
 });
 
