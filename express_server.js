@@ -15,6 +15,15 @@ app.use(morgan('dev'));
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
+// HELPER FUNCTIONS
+
+const { generateRandomString,
+        emailLookup,
+        passwordLookup,
+        idLookup,
+        filterURLS
+} = require('./helper_functions');
+
 // GLOBAL VARIABLES
 
 const urlDatabase = {
@@ -72,8 +81,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 // redirect to show all URLs page
 app.get('/urls', (req, res) => {
+  // console.log('userDB: ', userDatabase);
+  const userURLs = filterURLS(req.cookies['user'], urlDatabase);
+  console.log('customURLS: ', userURLs);
   const templateVars = {
-    urls: urlDatabase,
+    urls: userURLs,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     user_id: req.cookies['user_id'],
@@ -188,14 +200,14 @@ app.post('/login', (req, res) => {
   if (email === '' || password === '') {
     return res
     .status(400)
-    .send('Both password and email fields must be filled.');
+    .send("<html><body><b>Both password and email fields must be filled.</b></body></html>\n");
   }
   
   // Return error if email not in database
   if (!emailLookup(email, userDatabase)) {
     return res
     .status(403)
-    .send('That email is not registered.');
+    .send("<html><body><b>That email has not been registered.</b></body></html>\n");
   }
   
 
@@ -240,7 +252,8 @@ app.post('/register', (req, res) => {
 app.post('/urls/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   let newURL = req.body.new_url;
-  urlDatabase[shortURL] = newURL;
+  urlDatabase[shortURL]['longURL'] = newURL;
+
   res.redirect('/urls');
 });
 
@@ -256,34 +269,3 @@ app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
   res.redirect('/urls');
 });
-
-// FUNCTIONS
-
-const generateRandomString = () => {
-  return Math.random().toString(36).slice(-6);
-};
-
-const emailLookup = function(email, database) {
-  for (let key in database) {
-    if (database[key]['email'] === email) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const passwordLookup = function(email, database) {
-  for (let key in database) {
-    if (database[key]['email'] === email) {
-      return database[key]['password'];
-    }
-  }
-};
-
-const idLookup = function(email, database) {
-  for (let key in database) {
-    if (database[key]['email'] === email) {
-      return key;
-    }
-  }
-};
