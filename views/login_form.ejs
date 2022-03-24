@@ -10,13 +10,13 @@
 <body>
   <%- include('partials/_header') %>
   <main>
+    <h2>Login</h2>
     <form action="/login" method="POST">
-      <label for="name" >Email:</label>
+      <label for="name" >Email Address:</label>
       <input type="email" name="email" id="email">
-    
       <label for="name" >Password:</label>
       <input type="password" name="password" id="password">
-      <button type="submit" class="btn btn-light btn-sm">Login</button>
+      <button type="submit" class="btn btn-secondary">Login</button>
     </form>
   </main>
   <%- include('partials/_bootstrap.ejs') %>

@@ -22,7 +22,18 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const userDatabase = {};
+const userDatabase = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
 
 // Listen for incoming requests
 app.listen(PORT, () => {
@@ -55,55 +66,77 @@ if (longURL === undefined) {
 
 // redirect to show all URLs page
 app.get('/urls', (req, res) => {
-  const cookieID = req.cookies.id;
-  const userObject = userDatabase[cookieID];
-  const templateVars = { 
+  const templateVars = {
     urls: urlDatabase,
-    userObject: userObject
+    user_id: req.cookies["user_id"],
+    // Email if user has cookie, null if not
+    email: userDatabase[req.cookies["user_id"]]
+      ? userDatabase[req.cookies["user_id"]].email
+      : null,
   };
-  console.log('templateVars[userObject]: ', templateVars.userObject);
   res.render('urls_index', templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  templateVars = {
-    userObject: userDatabase[req.cookies.id]
-  }
+  const templateVars = {
+    urls: urlDatabase,
+    user_id: req.cookies["user_id"],
+    email: userDatabase[req.cookies["user_id"]]
+      ? userDatabase[req.cookies["user_id"]].email
+      : null,
+  };
+
   res.render("urls_new", templateVars);
 });
 
 // READ
 
 app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = { 
-    shortURL: req.params.shortURL,
-    longURL: req.params.longURL,
-    userObject: userDatabase[req.cookies.id]
-  }
+  const templateVars = {
+    urls: urlDatabase,
+    user_id: req.cookies["user_id"],
+    email: userDatabase[req.cookies["user_id"]]
+      ? userDatabase[req.cookies["user_id"]].email
+      : null,
+  };
 
   templateVars.longURL = urlDatabase[templateVars.shortURL]; // Temp workaround?
   res.render("urls_show", templateVars);
 });
 
 app.get('/register', (req, res) => {
-  templateVars = {
-    userDatabase: userDatabase,
-    userObject: userDatabase[req.cookies.id]
-  }
-  console.log('tem vars name: ', templateVars.username);
+  const templateVars = {
+    urls: urlDatabase,
+    user_id: req.cookies["user_id"],
+    email: userDatabase[req.cookies["user_id"]]
+      ? userDatabase[req.cookies["user_id"]].email
+      : null,
+  };
+
   res.render('register_form', templateVars);
 });
 
 app.get('/login', (req, res) => {
-  templateVars = {
-    userDatabase: userDatabase,
-    userObject: userDatabase[req.cookies.id]
-  }
+    const templateVars = {
+    urls: urlDatabase,
+    user_id: req.cookies["user_id"],
+    email: userDatabase[req.cookies["user_id"]]
+      ? userDatabase[req.cookies["user_id"]].email
+      : null,
+  };
+
   res.render('login_form', templateVars);
 });
 
 app.get('*', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+    const templateVars = {
+    urls: urlDatabase,
+    user_id: req.cookies["user_id"],
+    email: userDatabase[req.cookies["user_id"]]
+      ? userDatabase[req.cookies["user_id"]].email
+      : null,
+  };
+  
   res.render('urls_index', templateVars);
 });
 
@@ -121,7 +154,7 @@ app.post("/urls", (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user_id = req.cookies.id;
+  const user_id = idLookup(email, userDatabase);
   
   if (email === '' || password === '') {
     return res
@@ -136,9 +169,6 @@ app.post('/login', (req, res) => {
     .send('That email is not registered.');
   }
   
-  console.log('id in /login: ', user_id);
-  console.log('userDatabase: ', userDatabase);
-  console.log('DB password: ', userDatabase[user_id]['password']);
 
   if (password !== userDatabase[user_id]['password']) {
     return res
@@ -146,12 +176,11 @@ app.post('/login', (req, res) => {
     .send('Incorrect password.');
   }
   
-  res.cookie('user_id', );
+  res.cookie('user_id', user_id);
   res.redirect('/urls');
 });
 
 app.post('/register', (req, res) => {
-  console.log('users: ', userDatabase);
   const email = req.body.email;
   const password = req.body.password;
   const id = generateRandomString();
@@ -161,9 +190,6 @@ app.post('/register', (req, res) => {
       .status(400)
       .send('Both password and email fields must be filled out to register.');
   }
-
-  console.log('userDatabase: ', urlDatabase);
-  console.log('emailLookup: ', emailLookup(email, userDatabase));
   
   if (emailLookup(email, userDatabase)) {
     return res
@@ -171,17 +197,12 @@ app.post('/register', (req, res) => {
       .send('That email is already registered.')
   }
 
+  // Register user email/password in userDatabase
   userDatabase[id] = {};
   userDatabase[id]['id'] = id;
   userDatabase[id]['email'] = email;
   userDatabase[id]['password'] = password;
 
-  // templateVars = {
-  //   userObject: userDatabase[req.cookies.id]
-  // }
-
-  res.cookie('id', id);
-  console.log('userDatabase after registration: ', userDatabase);
   res.redirect('/urls');
 });
 
@@ -202,7 +223,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie(req.cookies.id);
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
@@ -219,4 +240,20 @@ const emailLookup = function(email, database) {
     }
   }
   return false;
+};
+
+const passwordLookup = function(email, database) {
+  for (let key in database) {
+    if (database[key]['email'] === email) {
+      return database[key]['password'];
+    }
+  }
+};
+
+const idLookup = function(email, database) {
+  for (let key in database) {
+    if (database[key]['email'] === email) {
+      return key;
+    }
+  }
 };

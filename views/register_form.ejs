@@ -10,12 +10,13 @@
 <body>
   <%- include('partials/_header') %>
   <main>
+    <h2>Create Account</h2>
     <form action="/register" method="POST">
-      <label for="email">Email:</label>
+      <label for="email">Email Address:</label>
       <input type="email" name="email" id="email">
       <label for="password">Password:</label>
       <input type="password" name="password" id="passowrd">
-      <button type="submit">Submit</button>
+      <button type="submit" class="btn btn-primary">Register</button>
     </form>
   </main>
   <%- include('partials/_bootstrap.ejs') %>
