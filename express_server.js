@@ -85,6 +85,8 @@ app.get("/urls/new", (req, res) => {
       ? userDatabase[req.cookies["user_id"]].email
       : null,
   };
+  // Redirect user to login screen if not logged in
+  if (!templateVars.user_id) res.redirect('/login');
 
   res.render("urls_new", templateVars);
 });
@@ -223,6 +225,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
+  console.log('logging out...')
   res.clearCookie('user_id');
   res.redirect('/urls');
 });
