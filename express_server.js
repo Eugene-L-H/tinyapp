@@ -15,11 +15,27 @@ app.use(morgan('dev'));
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
+// HELPER FUNCTIONS
+
+const { generateRandomString,
+        emailLookup,
+        urlShortLookup,
+        idLookup,
+        filterURLS,
+        blockUnregisteredUser
+} = require('./helper_functions');
+
 // GLOBAL VARIABLES
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+        longURL: "https://www.tsn.ca",
+        userID: "aJ48lW"
+    },
+  i3BoGr: {
+        longURL: "https://www.google.ca",
+        userID: "aJ48lW"
+    }
 };
 
 const userDatabase = {
@@ -43,11 +59,12 @@ app.listen(PORT, () => {
 // ROUTES
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
-  console.log('request recieved');
+  res.redirect('urls');
 });
 
 app.get("/urls.json", (req, res) => {
+  blockUnregisteredUser(req.cookies.user_id, res);
+  
   res.json(urlDatabase);
 });
 
@@ -57,21 +74,24 @@ app.get("/hello", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
-if (longURL === undefined) {
-  // res.send('<script>alert("Invalid URL")</script>');s
-  return res.redirect('/urls');
+  if (longURL === undefined) {
+    // res.send('<script>alert("Invalid URL")</script>');
+    return res.redirect('/urls');
 }
   res.redirect(longURL);
 });
 
 // redirect to show all URLs page
 app.get('/urls', (req, res) => {
+  // Store URLs that are associated with the user_id into an object
+  const userURLs = filterURLS(req.cookies['user'], urlDatabase);
+
   const templateVars = {
-    urls: urlDatabase,
-    user_id: req.cookies["user_id"],
+    urls: userURLs,
+    user_id: req.cookies['user_id'],
     // Email if user has cookie, null if not
-    email: userDatabase[req.cookies["user_id"]]
-      ? userDatabase[req.cookies["user_id"]].email
+    email: userDatabase[req.cookies['user_id']]
+      ? userDatabase[req.cookies['user_id']].email
       : null,
   };
   res.render('urls_index', templateVars);
@@ -80,11 +100,15 @@ app.get('/urls', (req, res) => {
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user_id: req.cookies["user_id"],
-    email: userDatabase[req.cookies["user_id"]]
-      ? userDatabase[req.cookies["user_id"]].email
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    user_id: req.cookies['user_id'],
+    email: userDatabase[req.cookies['user_id']]
+      ? userDatabase[req.cookies['user_id']].email
       : null,
   };
+  // Redirect user to login screen if not logged in
+  if (!templateVars.user_id) res.redirect('/login');
 
   res.render("urls_new", templateVars);
 });
@@ -92,24 +116,45 @@ app.get("/urls/new", (req, res) => {
 // READ
 
 app.get('/urls/:shortURL', (req, res) => {
+  // Invalid page recieves 404 error
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    return res
+      .status(404)
+      .send('<body><b>Page not found.<b><body>');
+  }
+
+  // Unregistered users can not view links
+  blockUnregisteredUser(req.cookies.user_id, res);
+
   const templateVars = {
     urls: urlDatabase,
-    user_id: req.cookies["user_id"],
-    email: userDatabase[req.cookies["user_id"]]
-      ? userDatabase[req.cookies["user_id"]].email
-      : null,
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    user_id: req.cookies['user_id'],
+    email: userDatabase[req.cookies['user_id']]
+    ? userDatabase[req.cookies['user_id']].email
+    : null,
+  };
+  console.log('urlDatabase in app.get/urls/:short: ', urlDatabase);
+  console.log('shortURL: ', req.params.shortURL, ' Login id: ', req.cookies.user_id);
+  // Registered user tries to view un-owned link
+  if (urlDatabase[req.params.shortURL]['user_id'] !== req.cookies.user_id) {
+    return res
+      .status(401)
+      .send('<body><b>You do not have access to this page.<b><body>');
   };
 
-  templateVars.longURL = urlDatabase[templateVars.shortURL]; // Temp workaround?
   res.render("urls_show", templateVars);
 });
 
 app.get('/register', (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user_id: req.cookies["user_id"],
-    email: userDatabase[req.cookies["user_id"]]
-      ? userDatabase[req.cookies["user_id"]].email
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    user_id: req.cookies['user_id'],
+    email: userDatabase[req.cookies['user_id']]
+      ? userDatabase[req.cookies['user_id']].email
       : null,
   };
 
@@ -119,9 +164,11 @@ app.get('/register', (req, res) => {
 app.get('/login', (req, res) => {
     const templateVars = {
     urls: urlDatabase,
-    user_id: req.cookies["user_id"],
-    email: userDatabase[req.cookies["user_id"]]
-      ? userDatabase[req.cookies["user_id"]].email
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    user_id: req.cookies['user_id'],
+    email: userDatabase[req.cookies['user_id']]
+      ? userDatabase[req.cookies['user_id']].email
       : null,
   };
 
@@ -129,11 +176,13 @@ app.get('/login', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-    const templateVars = {
-    urls: urlDatabase,
-    user_id: req.cookies["user_id"],
-    email: userDatabase[req.cookies["user_id"]]
-      ? userDatabase[req.cookies["user_id"]].email
+  const userURLs = filterURLS(req.cookies['user'], urlDatabase);
+  const templateVars = {
+    urls: userURLs,
+    user_id: req.cookies['user_id'],
+    // Email if user has cookie, null if not
+    email: userDatabase[req.cookies['user_id']]
+      ? userDatabase[req.cookies['user_id']].email
       : null,
   };
   
@@ -143,13 +192,19 @@ app.get('*', (req, res) => {
 // CREATE
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  
+  console.log('body.longURL: ', req.body.longURL);  // Log the POST request body to the console
+
+  blockUnregisteredUser(req.cookies.user_id, res);
   let shortUrlRandom = generateRandomString();
 
-  urlDatabase[shortUrlRandom] = req.body.longURL;
+  // Add new short URL to urlDatabase
+  urlDatabase[shortUrlRandom] = {};
+  urlDatabase[shortUrlRandom]['longURL'] = req.body.longURL;
+  urlDatabase[shortUrlRandom]['user_id'] = req.cookies['user_id'];
+  console.log('newURL object: ', urlDatabase[shortUrlRandom]);
   res.redirect(`/urls/${shortUrlRandom}`); 
 });
+console.log('urlDatabase in app.post: ', urlDatabase)
 
 app.post('/login', (req, res) => {
   const email = req.body.email;
@@ -159,14 +214,14 @@ app.post('/login', (req, res) => {
   if (email === '' || password === '') {
     return res
     .status(400)
-    .send('Both password and email fields must be filled.');
+    .send("<html><body><b>Both password and email fields must be filled.</b></body></html>\n");
   }
   
   // Return error if email not in database
   if (!emailLookup(email, userDatabase)) {
     return res
     .status(403)
-    .send('That email is not registered.');
+    .send("<html><body><b>That email has not been registered.</b></body></html>\n");
   }
   
 
@@ -209,51 +264,28 @@ app.post('/register', (req, res) => {
 // UPDATE
 
 app.post('/urls/:shortURL', (req, res) => {
+  blockUnregisteredUser(req.cookies.user_id, res);
+
   let shortURL = req.params.shortURL;
   let newURL = req.body.new_url;
-  urlDatabase[shortURL] = newURL;
+  urlDatabase[shortURL]['longURL'] = newURL;
+
   res.redirect('/urls');
 });
 
 // DELETE
 
 app.post("/urls/:shortURL/delete", (req, res) => {
+  blockUnregisteredUser(req.cookies.user_id, res);
+
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 });
 
 app.post('/logout', (req, res) => {
+  blockUnregisteredUser(req.cookies.user_id, res);
+
+  console.log('logging out...')
   res.clearCookie('user_id');
   res.redirect('/urls');
 });
-
-// FUNCTIONS
-
-const generateRandomString = () => {
-  return Math.random().toString(36).slice(-6);
-};
-
-const emailLookup = function(email, database) {
-  for (let key in database) {
-    if (database[key]['email'] === email) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const passwordLookup = function(email, database) {
-  for (let key in database) {
-    if (database[key]['email'] === email) {
-      return database[key]['password'];
-    }
-  }
-};
-
-const idLookup = function(email, database) {
-  for (let key in database) {
-    if (database[key]['email'] === email) {
-      return key;
-    }
-  }
-};
