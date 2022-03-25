@@ -31,8 +31,15 @@ const { generateRandomString,
 
 // GLOBAL VARIABLES
 
-const urlDatabase = {};
-const userDatabase = {};
+const urlDatabase = { rmjcd8: 
+                      { longURL: 'http://www.google.ca',
+                        user_id: 'qlxkk6' } };
+
+const userDatabase = { 
+  qlxkk6: {
+    email: 'rjzimmy2013@gmail.com',
+    password: 'gas'
+} };
 
 // Listen for incoming requests
 app.listen(PORT, () => {
@@ -90,10 +97,19 @@ app.get('/urls/:shortURL', (req, res) => {
   // Unregistered users can not view links
   blockUnregisteredUser(req.session.user_id, res);
   const shortURL = req.params.shortURL;
-  console.log('user_id in urls/short *** ', req.session.user_id);
   const userURLs = filterURLS(req.session.user_id, urlDatabase);
-  console.log('GET/urls/:short, userURLS: ', userURLs)
 
+  // Registered user tries to view un-owned link
+  if (urlDatabase[shortURL]) { // if link exists in urlDatabase:
+    const registeredLinkUserID = urlDatabase[shortURL].user_id;
+    const sessionUserID = req.session.user_id;
+    if(registeredLinkUserID !== sessionUserID) {
+      return res
+      .status(401)
+      .send('<body><b>You do not have access to this page.<b><body>');
+    }
+  };
+  
   // Invalid page recieves 404 error
   if (!userURLs[shortURL]) {
     return res
@@ -109,14 +125,7 @@ app.get('/urls/:shortURL', (req, res) => {
       ? userDatabase[req.session.user_id].email
       : null,
     };
-    
-    // Registered user tries to view un-owned link
-    if (urlDatabase[req.params.shortURL]['user_id'] !== req.session.user_id) {
-      return res
-        .status(401)
-        .send('<body><b>You do not have access to this page.<b><body>');
-    };
-    
+
     return res.render("urls_show", templateVars);
  });
 
@@ -249,13 +258,15 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
+
+
 // UPDATE
 
-app.post('/urls/:shortURL', (req, res) => {
+app.post('/urls/:id', (req, res) => {
   blockUnregisteredUser(req.session.user_id, res);
 
-  let shortURL = req.params.shortURL;
-  let newURL = req.body.new_url;
+  const shortURL = req.params.id;
+  const newURL = req.body.new_url;
   urlDatabase[shortURL]['longURL'] = newURL;
 
   res.redirect('/urls');
@@ -263,19 +274,19 @@ app.post('/urls/:shortURL', (req, res) => {
 
 // DELETE
 
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.post("/urls/:id/delete", (req, res) => {
   blockUnregisteredUser(req.session.user_id, res);
 
-  const shortURL = req.params.shortURL;
-  const userURLs = filterURLS(req.session['user'], urlDatabase);
+  const id = req.params.id;
+  const userURLs = filterURLS(req.session.user_id, urlDatabase);
 
-  if (!userURLs[shortURL]) {
+  if (!userURLs[id]) {
     return res
     .status(401)
     .send("Invalid URL.");
   }
 
-  delete urlDatabase[shortURL];
+  delete urlDatabase[id];
   res.redirect('/urls');
 });
 
