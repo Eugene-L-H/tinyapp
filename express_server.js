@@ -238,6 +238,7 @@ app.post('/login', (req, res) => {
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateRandomString();
 
   if (email === '' || password === '') {
@@ -256,7 +257,7 @@ app.post('/register', (req, res) => {
   userDatabase[id] = {};
   userDatabase[id]['id'] = id;
   userDatabase[id]['email'] = email;
-  userDatabase[id]['password'] = password;
+  userDatabase[id]['password'] = hashedPassword;
 
   res.redirect('/urls');
 });
