@@ -15,6 +15,8 @@ app.use(morgan('dev'));
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
+const bcrypt = require('bcryptjs');
+
 // HELPER FUNCTIONS
 
 const { generateRandomString,
@@ -224,8 +226,7 @@ app.post('/login', (req, res) => {
     .send("<html><body><b>That email has not been registered.</b></body></html>\n");
   }
   
-
-  if (password !== userDatabase[user_id]['password']) {
+  if (!bcrypt.compareSync(password, userDatabase[user_id]['password'])) {
     return res
     .status(403)
     .send('Incorrect password.');
