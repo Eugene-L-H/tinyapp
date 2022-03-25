@@ -31,7 +31,7 @@ const filterURLS = function(userID, database) {
     }
   }
   return userURLs;
-}
+};
 
 const blockUnregisteredUser = function(cookieID, res) {
   console.log(cookieID);
@@ -40,9 +40,9 @@ const blockUnregisteredUser = function(cookieID, res) {
       .status(401)
       .send('Must be registered and logged in to do that.\n');
   }
-}
+};
 
-module.exports = { 
+module.exports = {
   generateRandomString,
   emailLookup,
   idLookup,

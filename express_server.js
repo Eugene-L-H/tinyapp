@@ -23,23 +23,23 @@ const bcrypt = require('bcryptjs');
 // HELPER FUNCTIONS
 
 const { generateRandomString,
-        emailLookup,
-        idLookup,
-        filterURLS,
-        blockUnregisteredUser
+  emailLookup,
+  idLookup,
+  filterURLS,
+  blockUnregisteredUser
 } = require('./helper_functions');
 
 // GLOBAL VARIABLES
 
-const urlDatabase = { rmjcd8: 
+const urlDatabase = { rmjcd8:
                       { longURL: 'http://www.google.ca',
                         user_id: 'qlxkk6' } };
 
-const userDatabase = { 
+const userDatabase = {
   qlxkk6: {
     email: 'rjzimmy2013@gmail.com',
     password: 'gas'
-} };
+  } };
 
 // Listen for incoming requests
 app.listen(PORT, () => {
@@ -103,34 +103,33 @@ app.get('/urls/:shortURL', (req, res) => {
   if (urlDatabase[shortURL]) { // if link exists in urlDatabase:
     const registeredLinkUserID = urlDatabase[shortURL].user_id;
     const sessionUserID = req.session.user_id;
-    if(registeredLinkUserID !== sessionUserID) {
+    if (registeredLinkUserID !== sessionUserID) {
       return res
-      .status(401)
-      .send('<body><b>You do not have access to this page.<b><body>');
+        .status(401)
+        .send('<body><b>You do not have access to this page.<b><body>');
     }
-  };
+  }
   
   // Invalid page recieves 404 error
   if (!userURLs[shortURL]) {
     return res
       .status(404)
       .send('<body><b>Page not found.<b><body>');
-    }
+  }
     
-    const templateVars = {
-      shortURL: req.params.shortURL,
-      longURL: urlDatabase[req.params.shortURL].longURL,
-      user_id: req.session.user_id,
-      email: userDatabase[req.session.user_id]
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    user_id: req.session.user_id,
+    email: userDatabase[req.session.user_id]
       ? userDatabase[req.session.user_id].email
       : null,
-    };
+  };
 
-    return res.render("urls_show", templateVars);
- });
+  return res.render("urls_show", templateVars);
+});
 
-  
-  app.get("/u/:id", (req, res) => {
+app.get("/u/:id", (req, res) => {
   blockUnregisteredUser(req.session.user_id, res);
   const shortURL = req.params.id;
   const shortURLid = urlDatabase[shortURL];
@@ -146,12 +145,17 @@ app.get('/urls/:shortURL', (req, res) => {
 // READ
 
 app.get('/login', (req, res) => {
+  // Redirect user who is logged in
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  }
+
   const templateVars = {
-    user_id: userDatabase[req.session.user_id] 
-      ? userDatabase[req.session.user_id] 
+    user_id: userDatabase[req.session.user_id]
+      ? userDatabase[req.session.user_id]
       : null,
-    email: userDatabase[req.session.user_id] 
-      ? userDatabase[req.session.user_id].email 
+    email: userDatabase[req.session.user_id]
+      ? userDatabase[req.session.user_id].email
       : null,
   };
 
@@ -159,12 +163,17 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
+  // Redirect user who is logged in
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  }
+  
   const templateVars = {
-    user_id: userDatabase[req.session.user_id] 
-      ? userDatabase[req.session.user_id] 
+    user_id: userDatabase[req.session.user_id]
+      ? userDatabase[req.session.user_id]
       : null,
-    email: userDatabase[req.session.user_id] 
-      ? userDatabase[req.session.user_id].email 
+    email: userDatabase[req.session.user_id]
+      ? userDatabase[req.session.user_id].email
       : null,
   };
 
@@ -172,10 +181,10 @@ app.get('/register', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-  const userURLs = filterURLS(req.session['user'], urlDatabase);
+  const userURLs = filterURLS(req.session.user_id, urlDatabase);
   const templateVars = {
     urls: userURLs,
-    user_id: req.session['user_id'],
+    user_id: req.session.user_id,
     // Email if user has cookie, null if not
     email: userDatabase[req.session['user_id']]
       ? userDatabase[req.session['user_id']].email
@@ -198,7 +207,7 @@ app.post('/urls', (req, res) => {
   urlDatabase[shortUrlRandom]['user_id'] = req.session.user_id;
   console.log(urlDatabase);
 
-  res.redirect(`/urls/${shortUrlRandom}`); 
+  res.redirect(`/urls/${shortUrlRandom}`);
 });
 
 app.post('/login', (req, res) => {
@@ -208,21 +217,21 @@ app.post('/login', (req, res) => {
 
   if (email === '' || password === '') {
     return res
-    .status(400)
-    .send("<html><body><b>Both password and email fields must be filled.</b></body></html>\n");
+      .status(400)
+      .send("<html><body><b>Both password and email fields must be filled.</b></body></html>\n");
   }
   
   // Return error if email not in database
   if (!emailLookup(email, userDatabase)) {
     return res
-    .status(403)
-    .send("<html><body><b>That email has not been registered.</b></body></html>\n");
+      .status(403)
+      .send("<html><body><b>That email has not been registered.</b></body></html>\n");
   }
   
   if (!bcrypt.compareSync(password, userDatabase[user_id]['password'])) {
     return res
-    .status(403)
-    .send('Incorrect password.');
+      .status(403)
+      .send('Incorrect password.');
   }
   
   req.session.user_id = user_id;
@@ -232,7 +241,7 @@ app.post('/login', (req, res) => {
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  hashedPassword = bcrypt.hashSync(password, 10);
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateRandomString();
 
   if (email === '' || password === '') {
@@ -244,7 +253,7 @@ app.post('/register', (req, res) => {
   if (emailLookup(email, userDatabase)) {
     return res
       .status(400)
-      .send('That email is already registered.')
+      .send('That email is already registered.');
   }
 
   // Register user email/password in userDatabase
@@ -282,8 +291,8 @@ app.post("/urls/:id/delete", (req, res) => {
 
   if (!userURLs[id]) {
     return res
-    .status(401)
-    .send("Invalid URL.");
+      .status(401)
+      .send("Invalid URL.");
   }
 
   delete urlDatabase[id];
@@ -293,7 +302,7 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post('/logout', (req, res) => {
   blockUnregisteredUser(req.session.user_id, res);
 
-  console.log('logging out...')
+  console.log('logging out...');
   req.session = null; // Kill cookie session
   return res.redirect('/urls');
 });
