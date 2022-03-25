@@ -12,15 +12,6 @@ const emailLookup = function(email, database) {
   return false;
 };
 
-const urlShortLookup  = function(url, database) {
-  for (let key in database) {
-    if (key === url) {
-      return true;
-    }
-  }
-  return false;
-};
-
 const idLookup = function(email, database) {
   for (let key in database) {
     if (database[key]['email'] === email) {
@@ -55,7 +46,6 @@ const blockUnregisteredUser = function(cookieID, res) {
 module.exports = { 
   generateRandomString,
   emailLookup,
-  urlShortLookup,
   idLookup,
   filterURLS,
   blockUnregisteredUser
