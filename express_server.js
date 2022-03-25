@@ -57,7 +57,8 @@ app.get("/hello", (req, res) => {
 // redirect to show all URLs page
 app.get('/urls', (req, res) => {
   // Store URLs that are associated with the user_id into an object
-  const userURLs = filterURLS(req.session.user, urlDatabase);
+  const userURLs = filterURLS(req.session.user_id, urlDatabase);
+
   const templateVars = {
     urls: userURLs,
     user_id: req.session.user_id,
@@ -89,7 +90,9 @@ app.get('/urls/:shortURL', (req, res) => {
   // Unregistered users can not view links
   blockUnregisteredUser(req.session.user_id, res);
   const shortURL = req.params.shortURL;
-  const userURLs = filterURLS(req.session.user, urlDatabase);
+  console.log('user_id in urls/short *** ', req.session.user_id);
+  const userURLs = filterURLS(req.session.user_id, urlDatabase);
+  console.log('GET/urls/:short, userURLS: ', userURLs)
 
   // Invalid page recieves 404 error
   if (!userURLs[shortURL]) {
@@ -183,7 +186,8 @@ app.post('/urls', (req, res) => {
   // Add new short URL to urlDatabase
   urlDatabase[shortUrlRandom] = {};
   urlDatabase[shortUrlRandom]['longURL'] = req.body.longURL;
-  urlDatabase[shortUrlRandom]['user_id'] = req.session['user_id'];
+  urlDatabase[shortUrlRandom]['user_id'] = req.session.user_id;
+  console.log(urlDatabase);
 
   res.redirect(`/urls/${shortUrlRandom}`); 
 });

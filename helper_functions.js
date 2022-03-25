@@ -24,8 +24,7 @@ const idLookup = function(email, database) {
 const filterURLS = function(userID, database) {
   const userURLs = {};
   for (let shortURL in database) {
-      console.log('database[shortURL]["userID"]: ', database[shortURL]['userID'], ' === userID: ', userID);
-    if (database[shortURL]['userID'] === userID) {
+    if (database[shortURL]['user_id'] === userID) {
       // id === shortURL
       userURLs[shortURL] = {};
       userURLs[shortURL]['longURL'] = database[shortURL].longURL;
