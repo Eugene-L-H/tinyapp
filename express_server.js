@@ -19,9 +19,10 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 const { generateRandomString,
         emailLookup,
-        passwordLookup,
+        urlShortLookup,
         idLookup,
-        filterURLS
+        filterURLS,
+        blockUnregisteredUser
 } = require('./helper_functions');
 
 // GLOBAL VARIABLES
@@ -31,7 +32,7 @@ const urlDatabase = {
         longURL: "https://www.tsn.ca",
         userID: "aJ48lW"
     },
-    i3BoGr: {
+  i3BoGr: {
         longURL: "https://www.google.ca",
         userID: "aJ48lW"
     }
@@ -58,11 +59,12 @@ app.listen(PORT, () => {
 // ROUTES
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
-  console.log('request recieved');
+  res.redirect('urls');
 });
 
 app.get("/urls.json", (req, res) => {
+  blockUnregisteredUser(req.cookies.user_id, res);
+  
   res.json(urlDatabase);
 });
 
@@ -81,13 +83,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 // redirect to show all URLs page
 app.get('/urls', (req, res) => {
-  // console.log('userDB: ', userDatabase);
+  // Store URLs that are associated with the user_id into an object
   const userURLs = filterURLS(req.cookies['user'], urlDatabase);
-  console.log('customURLS: ', userURLs);
+
   const templateVars = {
     urls: userURLs,
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
     user_id: req.cookies['user_id'],
     // Email if user has cookie, null if not
     email: userDatabase[req.cookies['user_id']]
@@ -116,14 +116,32 @@ app.get("/urls/new", (req, res) => {
 // READ
 
 app.get('/urls/:shortURL', (req, res) => {
+  // Invalid page recieves 404 error
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    return res
+      .status(404)
+      .send('<body><b>Page not found.<b><body>');
+  }
+
+  // Unregistered users can not view links
+  blockUnregisteredUser(req.cookies.user_id, res);
+
   const templateVars = {
     urls: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user_id: req.cookies['user_id'],
     email: userDatabase[req.cookies['user_id']]
-      ? userDatabase[req.cookies['user_id']].email
-      : null,
+    ? userDatabase[req.cookies['user_id']].email
+    : null,
+  };
+  console.log('urlDatabase in app.get/urls/:short: ', urlDatabase);
+  console.log('shortURL: ', req.params.shortURL, ' Login id: ', req.cookies.user_id);
+  // Registered user tries to view un-owned link
+  if (urlDatabase[req.params.shortURL]['user_id'] !== req.cookies.user_id) {
+    return res
+      .status(401)
+      .send('<body><b>You do not have access to this page.<b><body>');
   };
 
   res.render("urls_show", templateVars);
@@ -158,13 +176,13 @@ app.get('/login', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-    const templateVars = {
-    urls: urlDatabase,
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
-    user_id: req.cookies["user_id"],
-    email: userDatabase[req.cookies["user_id"]]
-      ? userDatabase[req.cookies["user_id"]].email
+  const userURLs = filterURLS(req.cookies['user'], urlDatabase);
+  const templateVars = {
+    urls: userURLs,
+    user_id: req.cookies['user_id'],
+    // Email if user has cookie, null if not
+    email: userDatabase[req.cookies['user_id']]
+      ? userDatabase[req.cookies['user_id']].email
       : null,
   };
   
@@ -176,12 +194,7 @@ app.get('*', (req, res) => {
 app.post("/urls", (req, res) => {
   console.log('body.longURL: ', req.body.longURL);  // Log the POST request body to the console
 
-  if (!req.cookies.user_id) {
-    return res
-      .status(401)
-      .send('Must be registered and logged in to do that.\n');
-  }
-  
+  blockUnregisteredUser(req.cookies.user_id, res);
   let shortUrlRandom = generateRandomString();
 
   // Add new short URL to urlDatabase
@@ -191,6 +204,7 @@ app.post("/urls", (req, res) => {
   console.log('newURL object: ', urlDatabase[shortUrlRandom]);
   res.redirect(`/urls/${shortUrlRandom}`); 
 });
+console.log('urlDatabase in app.post: ', urlDatabase)
 
 app.post('/login', (req, res) => {
   const email = req.body.email;
@@ -250,6 +264,8 @@ app.post('/register', (req, res) => {
 // UPDATE
 
 app.post('/urls/:shortURL', (req, res) => {
+  blockUnregisteredUser(req.cookies.user_id, res);
+
   let shortURL = req.params.shortURL;
   let newURL = req.body.new_url;
   urlDatabase[shortURL]['longURL'] = newURL;
@@ -260,11 +276,15 @@ app.post('/urls/:shortURL', (req, res) => {
 // DELETE
 
 app.post("/urls/:shortURL/delete", (req, res) => {
+  blockUnregisteredUser(req.cookies.user_id, res);
+
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 });
 
 app.post('/logout', (req, res) => {
+  blockUnregisteredUser(req.cookies.user_id, res);
+
   console.log('logging out...')
   res.clearCookie('user_id');
   res.redirect('/urls');

@@ -12,12 +12,13 @@ const emailLookup = function(email, database) {
   return false;
 };
 
-const passwordLookup = function(email, database) {
+const urlShortLookup  = function(url, database) {
   for (let key in database) {
-    if (database[key]['email'] === email) {
-      return database[key]['password'];
+    if (key === url) {
+      return true;
     }
   }
+  return false;
 };
 
 const idLookup = function(email, database) {
@@ -42,9 +43,20 @@ const filterURLS = function(userID, database) {
   return userURLs;
 }
 
-module.exports = { generateRandomString,
-                    emailLookup,
-                    passwordLookup,
-                    idLookup,
-                    filterURLS
-                  };
+const blockUnregisteredUser = function(cookieID, res) {
+  console.log(cookieID);
+  if (!cookieID) {
+    return res
+      .status(401)
+      .send('Must be registered and logged in to do that.\n');
+  }
+}
+
+module.exports = { 
+  generateRandomString,
+  emailLookup,
+  urlShortLookup,
+  idLookup,
+  filterURLS,
+  blockUnregisteredUser
+};
