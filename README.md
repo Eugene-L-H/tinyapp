@@ -3,9 +3,11 @@
 TinyApp shortens URLs. 
 
 Users can register an account with an email and password, enter links to websites that TinyApp will generate a short-form URL for. 
-These links will be associated with the user who initialized them and will only be accessible when logged into their account. Users can login and logout after registration. Database exists as an object on the server and perists until the server is stopped.
+These links will be associated with the user who initialized them and will only be accessible when logged into their account. 
 
-This project was done as part of a learning experience while participating in
+Users can login and logout after registration. Database exists as an object on the server and perists until the server is stopped.
+
+* This project was done as part of a learning experience while participating in
 a 12 week full-stack web developer bootcamp by Lighthouse Labs.
 
 ## The learning objectives were:
