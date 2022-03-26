@@ -11,9 +11,9 @@
       </div>
     </div>
     <% if (user_id) { %>
-      <span>Logged in as: <%= email %></span>
+      <span style="color: #fff">Logged in as: &nbsp;<%= email %></span>
       <form action="/logout" method="POST">
-        <button type="submit" class="btn btn-primary">Logout</button>
+        <button type="submit" class="btn btn-primary" style="margin: 0 15px;">Logout</button>
       </form>
     <% } %>
     <% if (!user_id) { %>

@@ -10,17 +10,20 @@
     h3 {
       text-align: center;
     }
+    h4 {
+      text-align: center;
+    }
   </style>
   <title>TinyApp</title>
 </head>
 <body>
   <%- include('partials/_header') %>
   <main style="margin: 1em;">
+    <% if (user_id) { %>
     <h3>My URLs</h3>
     <table class="table">
 
       <tbody>
-        <% if (user_id) { %>
           <thead>
             <tr>
               <th scope="col">Short URL</th>

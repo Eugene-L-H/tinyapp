@@ -31,15 +31,8 @@ const { generateRandomString,
 
 // GLOBAL VARIABLES
 
-const urlDatabase = { rmjcd8:
-                      { longURL: 'http://www.google.ca',
-                        user_id: 'qlxkk6' } };
-
-const userDatabase = {
-  qlxkk6: {
-    email: 'rjzimmy2013@gmail.com',
-    password: 'gas'
-  } };
+const urlDatabase = {};
+const userDatabase = {};
 
 // Listen for incoming requests
 app.listen(PORT, () => {
