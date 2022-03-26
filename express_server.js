@@ -195,7 +195,7 @@ app.post('/urls', (req, res) => {
 
   // Add new short URL to urlDatabase
   urlDatabase[shortUrlRandom] = {};
-  urlDatabase[shortUrlRandom]['longURL'] = `https://${req.body.longURL}`;
+  urlDatabase[shortUrlRandom]['longURL'] = req.body.longURL;
   urlDatabase[shortUrlRandom]['user_id'] = req.session.user_id;
 
   res.redirect(`/urls/${shortUrlRandom}`);
