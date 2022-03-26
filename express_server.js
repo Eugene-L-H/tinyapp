@@ -198,7 +198,6 @@ app.post('/urls', (req, res) => {
   urlDatabase[shortUrlRandom] = {};
   urlDatabase[shortUrlRandom]['longURL'] = req.body.longURL;
   urlDatabase[shortUrlRandom]['user_id'] = req.session.user_id;
-  console.log(urlDatabase);
 
   res.redirect(`/urls/${shortUrlRandom}`);
 });
