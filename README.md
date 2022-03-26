@@ -24,3 +24,9 @@ a 12 week full-stack web developer bootcamp by Lighthouse Labs.
 ## Dev-Dependencies
 * nodemon
 * morgan
+
+## In Action
+
+!["Screenshot of URLs page"](https://github.com/Eugene-L-H/tinyapp/blob/main/docs/myURLs_page.png?raw=true)
+!["Screenshot of registration page"](https://github.com/Eugene-L-H/tinyapp/blob/main/docs/register_page.png?raw=true)
+!["Screenshot of edit URL page"](https://github.com/Eugene-L-H/tinyapp/blob/main/docs/edit_link.png?raw=true)
