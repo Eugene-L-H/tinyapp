@@ -190,19 +190,19 @@ app.get('*', (req, res) => {
 // CREATE
 
 app.post('/urls', (req, res) => {
-
   blockUnregisteredUser(req.session.user_id, res);
   let shortUrlRandom = generateRandomString();
 
   // Add new short URL to urlDatabase
   urlDatabase[shortUrlRandom] = {};
-  urlDatabase[shortUrlRandom]['longURL'] = req.body.longURL;
+  urlDatabase[shortUrlRandom]['longURL'] = `https://${req.body.longURL}`;
   urlDatabase[shortUrlRandom]['user_id'] = req.session.user_id;
 
   res.redirect(`/urls/${shortUrlRandom}`);
 });
 
 app.post('/login', (req, res) => {
+  blockUnregisteredUser(req.session.user_id, res);
   const email = req.body.email;
   const password = req.body.password;
   const user_id = idLookup(email, userDatabase);
@@ -231,6 +231,7 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
+  blockUnregisteredUser(req.session.user_id, res);
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
