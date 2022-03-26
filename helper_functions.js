@@ -2,7 +2,7 @@
 const generateRandomString = () => {
   return Math.random().toString(36).slice(-6);
 };
-
+// Check an email is associated with an id in a database, return true if present.
 const emailLookup = function(email, database) {
   for (let key in database) {
     if (database[key]['email'] === email) {
@@ -12,12 +12,14 @@ const emailLookup = function(email, database) {
   return false;
 };
 
+// Return the id of an item in a database that is associated with the id provied
 const idLookup = function(email, database) {
   for (let key in database) {
     if (database[key]['email'] === email) {
       return key;
     }
   }
+  return false;
 };
 
 
@@ -34,7 +36,6 @@ const filterURLS = function(userID, database) {
 };
 
 const blockUnregisteredUser = function(cookieID, res) {
-  console.log(cookieID);
   if (!cookieID) {
     return res
       .status(401)

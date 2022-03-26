@@ -5,13 +5,23 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+  <style>
+    h3 {
+      text-align: center;
+    }
+    .form {
+      display: flex;
+      flex-direction: column;
+      width: 35%;
+    }
+  </style>
   <title>TinyApp | Login</title>
 </head>
 <body>
   <%- include('partials/_header') %>
   <main>
-    <h2>Login</h2>
-    <form action="/login" method="POST">
+    <h3>Login</h3>
+    <form class="form-group" action="/login" method="POST">
       <label for="email" >Email Address:</label>
       <input type="email" name="email" id="email" placeholder="email">
       <label for="password">Password:</label>
