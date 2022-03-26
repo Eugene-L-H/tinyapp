@@ -30,3 +30,8 @@ a 12 week full-stack web developer bootcamp by Lighthouse Labs.
 !["Screenshot of URLs page"](https://github.com/Eugene-L-H/tinyapp/blob/main/docs/myURLs_page.png?raw=true)
 !["Screenshot of registration page"](https://github.com/Eugene-L-H/tinyapp/blob/main/docs/register_page.png?raw=true)
 !["Screenshot of edit URL page"](https://github.com/Eugene-L-H/tinyapp/blob/main/docs/edit_link.png?raw=true)
+
+## INSTALL
+
+* From user's system inside the tinyapp-main folder run the express_server.js file with node command : ```$ node express_server.js```
+* Visit http://localhost:8080 in your browser address bar and the main urls page should be displayed.
