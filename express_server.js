@@ -260,8 +260,6 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
-
-
 // UPDATE
 
 app.post('/urls/:id', (req, res) => {
